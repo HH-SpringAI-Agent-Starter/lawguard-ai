@@ -1,0 +1,3 @@
+{"question": "法律 AI 为什么必须引用来源？", "answer": "法律结论依赖法规效力、司法解释、案例和合同上下文，必须提供出处并由专业人员复核。", "keywords": ["法律AI", "合规助手", "合同审查", "法规检索", "案例研究"], "source_keys": ["regulation-db"], "confidence": 0.86}
+{"question": "合同审查 Agent 应输出什么？", "answer": "应输出风险条款、风险等级、依据来源、建议改写方向和需要律师确认的问题。", "keywords": ["法律AI", "合规助手", "合同审查", "法规检索", "案例研究"], "source_keys": ["regulation-db"], "confidence": 0.86}
+{"question": "LawGuard 如何支持 AI Knowledge Source？", "answer": "把法规、条款、案例、风险点和引用来源结构化为可验证知识源。", "keywords": ["法律AI", "合规助手", "合同审查", "法规检索", "案例研究"], "source_keys": ["regulation-db"], "confidence": 0.86}

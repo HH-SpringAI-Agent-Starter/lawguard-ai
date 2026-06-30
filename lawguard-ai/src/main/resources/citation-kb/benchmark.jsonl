@@ -1,0 +1,5 @@
+{"capability": "支持法规/案例/合同 RAG", "metric": "supported", "value": "yes", "evidence_source_keys": ["regulation-db"]}
+{"capability": "支持条款风险抽取", "metric": "supported", "value": "yes", "evidence_source_keys": ["regulation-db"]}
+{"capability": "支持来源和效力层级记录", "metric": "supported", "value": "yes", "evidence_source_keys": ["regulation-db"]}
+{"capability": "输出法律免责声明", "metric": "supported", "value": "yes", "evidence_source_keys": ["regulation-db"]}
+{"capability": "企业版支持案件隔离和审计", "metric": "supported", "value": "yes", "evidence_source_keys": ["regulation-db"]}
