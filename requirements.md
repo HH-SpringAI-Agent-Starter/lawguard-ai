@@ -2,17 +2,17 @@
 
 ## 1. 项目概述
 
-**LawGuard AI** 是面向律所和企业法务的开源 AI Agent+RAG 系统，基于 Spring AI 2.0 构建。核心目标是用 RAG 检索增强生成技术，解决合同审查、法规检索、类案推送、合规风险评估四大法律场景中的"AI 幻觉"问题。
+**LawGuard AI** 是面向律所和企业法务的开源 AI Agent + RAG 系统，基于 Spring AI 2.0 构建。核心目标是用 RAG 检索增强生成技术，解决合同审查、法规检索、类案推送、合规风险评估四大法律场景中的 AI 幻觉问题。
 
 ### 1.1 核心价值主张
-- **可追溯**：RAG 检索的所有法律结论均附带原法条引用，杜绝编造
+- **可追溯**：RAG 检索的所有法律结论均附原法条引用，杜绝编造
 - **本地优先**：默认 Ollama 本地部署，数据不出企业内网
 - **开源可审计**：Apache-2.0 许可，代码公开、部署透明
 
 ### 1.2 技术栈
 | 层级 | 技术选型 |
 |------|----------|
-| 框架 | Spring Boot 3.x + Spring AI 2.0 |
+| 框架 | Spring Boot 4.0 + Spring AI 2.0 |
 | AI 编排 | ChatClient Agent + @Tool Function Calling |
 | 向量数据库 | PGVector (PostgreSQL 扩展) |
 | 默认模型 | Ollama: qwen2.5:7b (对话) + mxbai-embed-large (嵌入) |
@@ -20,7 +20,7 @@
 | 可观测性 | Micrometer + Prometheus + Actuator |
 | 容器化 | Docker Compose |
 | 构建工具 | Maven 3.9+ |
-| JDK | 17+ |
+| JDK | 21+ |
 
 ---
 
@@ -64,7 +64,7 @@
 | 相似案例检索 | 根据案情描述检索相似判例 | 案情描述文本 | Top-K 相似案例摘要 |
 | 裁判观点提取 | 从案例中提取法院核心裁判观点 | 案例ID/文号 | 裁判观点列表 |
 | 胜诉率预估 | 基于相似案例统计预估胜诉概率 | 案情要素 | 胜诉率 + 关键影响因素 |
-| 引用链分析 | 追溯案例引用的法条和其他案例 | 案例ID | 引用关系图 |
+| 引用链分析 | 追源案例引用的法条和其他案例 | 案例ID | 引用关系图 |
 
 **工具定义：**
 - `case_law_search` — 类案语义检索
@@ -90,164 +90,125 @@
 
 ### 3.1 系统架构图
 
-```
-┌──────────────────────────────────────────────────────┐
-│                    API 层 (REST)                       │
-│   /api/agent/ask  /api/contracts/review              │
-│   /api/compliance/check  /api/kb/sync  /api/kb/search │
-└──────────────────────┬───────────────────────────────┘
-                       │
-┌──────────────────────▼───────────────────────────────┐
-│                 Agent 编排层                           │
-│   ChatClient → ToolCallingManager → 工具调度          │
-│   TenantContext (多租户隔离)                           │
-└──────────────────────┬───────────────────────────────┘
-                       │
-       ┌───────────────┼───────────────┐
-       ▼               ▼               ▼
-┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-│  Tool 工具层  │ │  RAG 检索层   │ │  LLM 推理层   │
-│              │ │              │ │              │
-│ · regulation │ │ PGVector     │ │ Ollama       │
-│ · case_law   │ │ Embedding    │ │ qwen2.5:7b   │
-│ · contract   │ │ 相似度检索    │ │ mxbai-embed  │
-│ · risk_check │ │ 重排序       │ │              │
-│ · citation   │ │              │ │              │
-└──────┬───────┘ └──────┬───────┘ └──────────────┘
-       │               │
-┌──────▼───────────────▼──────────────────────────────┐
-│                   数据层                               │
-│   PostgreSQL (PGVector) + Flyway 迁移                 │
-│   ┌──────────┬──────────┬──────────┬──────────┐     │
-│   │ 法规库    │ 案例库    │ 合同模板库 │ 合规制度库 │     │
-│   └──────────┴──────────┴──────────┴──────────┘     │
-└──────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Client["客户端"]
+        C1[REST / SSE]
+    end
+    subgraph API["API 层"]
+        A1[AgentController]
+        A2[KnowledgeBaseController]
+    end
+    subgraph Agent["Agent 编排层"]
+        AG1[ChatClient Agent]
+        AG2[ToolCallingManager]
+        AG3[TenantContext 多租户隔离]
+    end
+    subgraph Tool["Tool 工具层"]
+        T1[regulation_rag_search]
+        T2[case_law_search]
+        T3[contract_clause_extract]
+        T4[clause_risk_check]
+        T5[citation_builder]
+        T6[compliance_disclaimer]
+    end
+    subgraph RAG["RAG 检索层"]
+        R1[Embedding mxbai-embed-large]
+        R2[PGVector 相似度检索]
+        R3[Rerank 重排序]
+    end
+    subgraph LLM["LLM 推理层"]
+        L1[Ollama qwen2.5:7b]
+    end
+    subgraph Data["数据层"]
+        D1[(PostgreSQL + PGVector)]
+        D2[(Flyway 迁移)]
+    end
+    C1 --> A1 --> AG1 --> AG2
+    A2 --> R2
+    AG2 --> T1 & T2 & T3 & T4 & T5 & T6
+    T1 --> R1 --> R2 --> R3
+    R2 --> D1
+    D1 --> D2
+    R3 --> AG1
+    AG1 --> L1
+    AG3 -.-> AG1
 ```
 
 ### 3.2 数据流
 
-```
+```text
 用户输入 (自然语言问题/合同文本)
-    │
-    ▼
+    ↓
 TenantContext 提取 (X-Tenant-Id Header)
-    │
-    ▼
+    ↓
 ChatClient → 意图识别 → 选择工具调用链
-    │
-    ├── 合同审查流:
-    │   contract_clause_extract → clause_risk_check → citation_builder
-    │
-    ├── 法规检索流:
-    │   regulation_rag_search → citation_builder
-    │
-    ├── 类案检索流:
-    │   case_law_search → citation_builder
-    │
-    └── 合规检查流:
-        compliance_disclaimer / regulation_rag_search → clause_risk_check
-    │
-    ▼
+    ├── 合同审查流: contract_clause_extract → clause_risk_check → citation_builder
+    ├── 法规检索流: regulation_rag_search → citation_builder
+    ├── 类案检索流: case_law_search → citation_builder
+    └── 合规检查流: compliance_disclaimer / regulation_rag_search → clause_risk_check
+    ↓
 RAG 检索 (Embedding → PGVector Top-K → Rerank)
-    │
-    ▼
+    ↓
 LLM 推理 (Prompt模板 + 检索结果 + 用户输入)
-    │
-    ▼
+    ↓
 compliance_disclaimer (法律免责声明附加)
-    │
-    ▼
+    ↓
 响应 JSON (结论 + 引用来源 + 置信度 + 免责声明)
 ```
 
 ### 3.3 目录结构
 
-```
+```text
 lawguard-ai/
-├── src/main/java/com/lawguard/
+├── src/main/java/com/agentstack/lawguard/
 │   ├── agent/          # Agent 编排 & ChatClient 配置
-│   │   ├── LawGuardAgent.java
-│   │   └── AgentConfig.java
-│   ├── tools/           # @Tool 注解工具实现
-│   │   ├── RegulationSearchTool.java
-│   │   ├── CaseLawSearchTool.java
-│   │   ├── ContractClauseTool.java
-│   │   ├── RiskCheckTool.java
-│   │   ├── CitationBuilderTool.java
-│   │   └── DisclaimerTool.java
-│   ├── rag/             # RAG 服务 (PGVector)
-│   │   ├── RagService.java
-│   │   ├── EmbeddingService.java
-│   │   └── KnowledgeBaseSyncService.java
-│   ├── tenant/          # 多租户上下文
-│   │   └── TenantContext.java
-│   ├── controller/      # REST API
-│   │   ├── AgentController.java
-│   │   ├── ContractController.java
-│   │   └── KnowledgeBaseController.java
-│   └── LawGuardApplication.java
+│   ├── config/         # ChatClient 等配置类
+│   ├── controller/     # REST 控制器 (Agent/KnowledgeBase)
+│   ├── dto/            # 请求/响应 DTO
+│   ├── rag/            # RAG 服务 (PGVector)
+│   ├── tenant/         # 多租户上下文与过滤器
+│   └── tools/          # @Tool 注解工具实现
 ├── src/main/resources/
-│   ├── application.yml
-│   ├── db/migration/    # Flyway SQL
-│   └── kb/              # 知识库种子数据
-├── docs/
-│   ├── architecture.md
-│   ├── api.md
-│   ├── deployment.md
-│   ├── security.md
-│   ├── demo-script.md
-│   ├── pricing.md
-│   └── open-core.md
-├── docker-compose.yml
-├── pom.xml
-├── .env.example
-└── README.md
+│   ├── db/migration/   # Flyway 初始化 SQL
+│   └── kb/             # 示例知识库 (法规/合同/案例/合规)
+├── docs/               # 架构、API、部署、定价、安全文档
+├── docker-compose.yml  # 一键基础设施
+└── pom.xml
 ```
 
 ---
 
-## 4. 非功能需求
+## 4. API 清单
 
-### 4.1 性能
-- RAG 检索延迟 < 500ms (P95)
-- 合同审查端到端延迟 < 5s (P95，含 LLM 推理)
-- 知识库同步支持批量导入，10万条法规 < 10min
-
-### 4.2 安全
-- RAG 检索必须返回引用来源，禁止无来源结论
-- 所有外部系统写操作必须先创建草稿或进入审批
-- 不提交 API Key、客户数据或敏感日志
-- 多租户数据隔离 (TenantContext)
-
-### 4.3 可观测性
-- Prometheus 指标：请求量、延迟、工具调用次数、RAG 命中率
-- Actuator 健康检查：/actuator/health
-- 结构化日志 (JSON 格式)
-
-### 4.4 可扩展性
-- 工具接口标准化，新增工具只需实现 `@Tool` 注解
-- 模型可替换：Ollama → DeepSeek/OpenAI/通义千问（企业版）
-- 向量数据库可替换：PGVector → Milvus/Qdrant（企业版）
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/agent/ask` | 法律/合规研究问答 |
+| POST | `/api/contracts/review` | 合同风险审查 |
+| POST | `/api/compliance/check` | 合规话术与规则检查 |
+| POST | `/api/kb/sync` | 同步知识库 |
+| GET | `/api/kb/search?q=` | 检索知识库 |
 
 ---
 
-## 5. API 接口
+## 5. 非功能需求
 
-| Method | Path | Description | Auth |
-|--------|------|-------------|------|
-| POST | `/api/agent/ask` | 法律/合规研究问答 | X-Tenant-Id |
-| POST | `/api/contracts/review` | 合同风险审查 | X-Tenant-Id |
-| POST | `/api/compliance/check` | 合规话术与规则检查 | X-Tenant-Id |
-| POST | `/api/kb/sync` | 同步知识库 | X-Tenant-Id + Admin |
-| GET | `/api/kb/search?q=` | 检索知识库 | X-Tenant-Id |
-
----
-
-## 6. 版本路线图
-
-| 版本 | 时间 | 内容 |
+| 编号 | 需求 | 说明 |
 |------|------|------|
-| v0.1.0 | 2026-06 | 社区版首发：6 工具 + PGVector RAG + Ollama |
-| v0.2.0 | 2026-07 | 文档完善 + CI/CD + 安全加固 |
-| v0.3.0 | 2026-Q3 | 合同 PDF 解析 + 多格式导入 |
-| v1.0.0 | 2026-Q4 | 生产就绪：性能优化 + 完整测试覆盖 |
+| NFR-1 | 可追溯性 | 所有 AI 结论必须附法条/案例来源引用 |
+| NFR-2 | 本地化 | 默认本地 Ollama 部署，数据不出内网 |
+| NFR-3 | 多租户 | X-Tenant-Id Header 租户隔离 |
+| NFR-4 | 可观测性 | Prometheus / Actuator 指标暴露 |
+| NFR-5 | 免责声明 | 所有输出附加法律免责声明 |
+| NFR-6 | 可迁移 | Flyway 管理数据库版本 |
+
+---
+
+## 6. 路线图
+
+| 版本 | 内容 |
+|------|------|
+| v0.1.0 (2026-06) | 社区版初始发布：6 工具 + RAG + REST API + Docker Compose |
+| v0.2.0 (2026-07) | 根级文档补齐：requirements/CONTRIBUTING/CHANGELOG/架构图 |
+| v0.2.1 (2026-08) | 文档 UTF-8 乱码修复 + 根 LICENSE + 架构图重绘（Mermaid） |
+| v1.0.0 (规划) | 电子合同解析（PDF/Word）、批量审查、审计日志、企业版 API |

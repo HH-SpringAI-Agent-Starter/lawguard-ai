@@ -1,5 +1,50 @@
+# ---- Environment & Secrets ----
 .env
-*.log
+.env.*
+*.local
+*.pem
+*.key
+secrets/
+
+# ---- Java / Maven ----
 target/
-node_modules/
+*.class
+*.jar
+*.war
+*.ear
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ---- IDE ----
 .idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- Node (docs tooling) ----
+node_modules/
+package-lock.json
+
+# ---- Docker ----
+docker/data/
+docker/postgres-data/
+
+# ---- Test & coverage ----
+coverage/
+*.test.js
+*.spec.js

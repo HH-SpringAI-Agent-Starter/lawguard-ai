@@ -5,6 +5,17 @@ All notable changes to LawGuard AI Community will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-08-07
+
+### Fixed
+- Root `README.md` rewritten: fixed UTF-8 double-encoding mojibake in Chinese content, added Mermaid architecture diagram and tech stack table
+- Root `requirements.md` rewritten: UTF-8 clean, full functional specs (contract review / regulation search / case law / compliance check), Mermaid architecture, data flow, API list, roadmap
+- Root `CONTRIBUTING.md` rewritten: UTF-8 clean, PR workflow, code style, tool contribution checklist
+
+### Added
+- Root `LICENSE` — full Apache-2.0 license text (was only present under `lawguard-ai/`)
+- Root `.gitignore` upgraded from 40B stub to comprehensive Java/Maven/IDE/Docker/Secrets rules
+
 ## [0.2.0] - 2026-07-03
 
 ### Added
