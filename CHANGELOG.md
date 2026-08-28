@@ -5,6 +5,18 @@ All notable changes to LawGuard AI Community will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-08-28
+
+### Added
+- `VectorStoreConfig`: 显式 `PgVectorStore` Bean（`knowledge_vectors` 表，1024 维，COSINE_DISTANCE），与 Ollama mxbai-embed-large 对齐
+- `V2__knowledge_vectors.sql`: 向量表迁移脚本 + tenant_id / source_type GIN 索引
+- `ScenarioController`: 补齐 README 已声明但缺失的 `/api/contracts/review` 与 `/api/compliance/check` 端点
+
+### Changed
+- `KnowledgeBaseService`: 由 TODO 桩升级为真实 PGVector 相似度检索，支持租户元数据过滤（`tenant_id == ...`）与来源类型过滤，新增 `ingest()` 向量入库
+- `DomainTools`: 六个工具由 demo stub 升级为真实 RAG 检索——`regulation_rag_search` / `case_law_search` / `contract_clause_extract` 按 source_type 检索并附带来源引用，`clause_risk_check` 叠加高风险关键词规则，`citation_builder` 输出可追溯引用列表，`compliance_disclaimer` 返回免责声明
+- `KnowledgeBaseController`: `/api/kb/sync` 实现文档入库，`/api/kb/search` 支持 type 过滤与 topK
+
 ## [0.2.1] - 2026-08-07
 
 ### Fixed
