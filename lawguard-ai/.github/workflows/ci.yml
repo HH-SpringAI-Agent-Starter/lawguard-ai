@@ -12,4 +12,14 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      - run: mvn -q -DskipTests package
+      # 单元测试（Mockito 隔离，无需数据库）随构建一并执行
+      - run: mvn -q -B package
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t lawguard-ai:ci .
+        working-directory: lawguard-ai

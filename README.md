@@ -63,6 +63,14 @@ ollama pull qwen2.5:7b
 mvn spring-boot:run
 ```
 
+**可选：容器化运行应用本身**
+
+```bash
+docker build -t lawguard-ai:0.3.1 lawguard-ai
+# 请确保 .env 中数据库/Redis/Ollama 地址指向宿主机可达地址
+docker run -d --name lawguard-ai --network host -p 8080:8080 lawguard-ai:0.3.1
+```
+
 **环境要求**：JDK 21+ · Maven 3.9+ · Docker · Ollama
 
 **示例调用：**

@@ -5,6 +5,18 @@ All notable changes to LawGuard AI Community will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-09-12
+
+### Added
+- `TenantContextTest`：ThreadLocal 行为单元测试（默认租户回退、空值回退、显式设置/清除、线程隔离）
+- `DomainToolsTest`：六个领域工具单元测试（Mockito 隔离 KnowledgeBaseService，不依赖数据库）——覆盖知识库未命中兜底文案、高风险关键词检出（违约金/赔偿/免责等）、引用列表去重构建、免责声明输出
+- `Dockerfile`：多阶段构建（maven:3.9-eclipse-temurin-21 编译 → temurin:21-jre 运行），支持 `docker build -t lawguard-ai:0.3.1 .`
+- `.dockerignore`：排除 target/、IDE 配置、.env 密钥等构建无关文件
+
+### Changed
+- `.github/workflows/ci.yml`：构建步骤移除 `-DskipTests`（单元测试随 CI 执行），新增 docker job 验证镜像可构建
+- `README.md`：快速开始补充容器化运行可选步骤
+
 ## [0.3.0] - 2026-08-28
 
 ### Added
